@@ -1,0 +1,84 @@
+/**
+ * Codasip s.r.o.
+ *
+ * CONFIDENTIAL
+ *
+ * Copyright 2022 Codasip s.r.o.
+ *
+ * All Rights Reserved.
+ *
+ * NOTICE: All information contained in this file, is and shall remain the property of
+ * Codasip s.r.o. and its suppliers, if any.
+ *
+ * The intellectual and technical concepts contained herein are confidential and proprietary to
+ * Codasip s.r.o. and are protected by trade secret and copyright law.  In addition, elements of the
+ * technical concepts may be patent pending.
+ *
+ * This file is part of the Codasip Studio product. No part of the Studio product, including this
+ * file, may be use, copied, modified, or distributed except in accordance with the terms contained
+ * in Codasip license agreement under which you obtained this file.
+ *
+ *  \file   ca_pipe4_me.codal
+ *  \author Codasip
+ *  \date   09.02.2022
+ *  \brief  cycle accurate model
+ */
+
+#include "ca_defines.hcodal"
+#include "config.hcodal"
+#include "my_signals.hcodal"
+
+// -------------------------------------------------------------------------------------------------
+// Memory Stage
+// -------------------------------------------------------------------------------------------------
+event me : pipeline(pipe.MEMWB)
+{
+    use me_output;
+    semantics
+    {
+        uint1 data_ready;
+        uint1 data_response;
+        uint32 load_data;
+        uint32 decoded_data;
+        
+        ldst.transport(CP_PHS_DATA, data_ready, data_response, load_data, r_exmem_encoded_data);
+        // Assert the memory bus stall signal if the memory is not ready or has not finished the transfer 
+        s_me_stall = (!data_ready || !data_response);
+
+        decoded_data = ldst.decode_data(load_data, r_exmem_alu_result, (s_ex_mem_size));
+        // Update the pipeline registers between the Memory (MEM) and Write Back (WB) stages
+        switch (r_exmem_mem_ops)
+        {
+        case MEM_LB:
+            r_exmem_alu_result = (int32)(int8)decoded_data;
+            break;
+        case MEM_LBU:
+            r_exmem_alu_result = (uint32)(uint8)decoded_data;
+            break;
+        case MEM_LH:
+            r_exmem_alu_result = (int32)(int16)decoded_data;
+            break;
+        case MEM_LHU:
+            r_exmem_alu_result = (uint32)(uint16)decoded_data;
+            break;
+        default:
+            r_exmem_alu_result = decoded_data;
+            break;
+        }
+        me_output();
+    };
+};
+
+event me_output : pipeline(pipe.MEMWB)
+{
+    semantics
+    {
+        // ALU result from the EXMEM pipeline register to pass along to the WB stage
+        //i added this one as it wasn't listed but seemed necessary
+        r_memwb_data_result = r_exmem_alu_result;
+
+        // Passing control signals to the next stage, WB, through the MEMWB pipeline register
+        r_memwb_rd          = r_exmem_rd;
+        r_memwb_regwrite    = r_exmem_regwrite;
+    };
+};

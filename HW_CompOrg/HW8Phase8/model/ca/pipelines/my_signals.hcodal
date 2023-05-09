@@ -1,0 +1,27 @@
+#ifndef MY_SIGNALS_H
+#define MY_SIGNALS_H
+
+// #include "ca/ca_defines.hcodal"
+#include "config.hcodal"
+// #include "ca_resources.codal"
+#include "opcodes.hcodal"
+#include "debug.hcodal"
+#include "utils.hcodal"
+// Control bit
+// signal bit[BOOLEAN_BIT] my_control_bit;
+
+// Pipeline registers
+// register bit[ADDR_W] my_ifid_pc { pipeline = pipe.IFID; };
+// register bit[CSR_W] my_idex_rs1 { pipeline = pipe.IDEX; };
+// register bit[CSR_W] my_idex_rs2 { pipeline = pipe.IDEX; };
+// register bit[BOOLEAN_BIT] my_idex_regwrite { pipeline = pipe.IDEX; };
+// register bit[RF_XPR_SIZE] my_exmem_alu_result { pipeline = pipe.EXMEM; };
+// register bit[BOOLEAN_BIT] my_exmem_regwrite { pipeline = pipe.EXMEM; };
+// register bit[BOOLEAN_BIT] my_memwb_regwrite { pipeline = pipe.MEMWB; };
+
+// Other signals
+bool data_ready;
+bool data_response;
+uint32 decoded_data;
+// s_id_mem_ops = mem_ops;
+#endif // MY_SIGNALS_H
